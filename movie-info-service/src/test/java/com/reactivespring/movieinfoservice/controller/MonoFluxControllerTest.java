@@ -88,4 +88,20 @@ class MonoFluxControllerTest {
                 .expectNext("hello world")
                 .verifyComplete();
     }
+
+    @Test
+    void stream(){
+        Flux<Integer> stream = webTestClient.get()
+                .uri("/stream")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .returnResult(Integer.class)
+                .getResponseBody();
+
+        StepVerifier.create(stream)
+                .expectNext(0, 1,2,3)
+                .thenCancel()
+                .verify();
+    }
 }
