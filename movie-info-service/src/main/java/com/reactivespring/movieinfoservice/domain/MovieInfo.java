@@ -66,4 +66,15 @@ public class MovieInfo {
     public void setRelaseDate(LocalDate relaseDate) {
         this.relaseDate = relaseDate;
     }
+
+    @Override
+    public String toString() {
+        return "MovieInfo{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", year=" + year +
+                ", cast=" + cast +
+                ", relaseDate=" + relaseDate +
+                '}';
+    }
 }
