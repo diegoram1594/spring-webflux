@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext()
 class MovieControllerTest {
 
+    public static final String MOVIEINFOS = "/v1/movieinfo";
     @Autowired
     private MovieInfoRepository movieInfoRepository;
     @Autowired
@@ -48,7 +49,7 @@ class MovieControllerTest {
     @Test
     void saveMovie() {
         webTestClient.post()
-                .uri("/v1/movieinfos")
+                .uri(MOVIEINFOS)
                 .bodyValue(
                         new MovieInfo("3","testMovie3",1994, List.of("testActor"), LocalDate.now()))
                 .exchange()
@@ -59,6 +60,31 @@ class MovieControllerTest {
                     MovieInfo movie = movieInfoEntityExchangeResult.getResponseBody();
                     assert movie != null;
                     assert movie.getId() != null;
+                });
+    }
+
+    @Test
+    public void getAllMovies(){
+        webTestClient.get()
+                .uri(MOVIEINFOS)
+                .exchange()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(2);
+    }
+
+    @Test
+    public void getMovieById(){
+        String id = "1";
+        webTestClient.get()
+                .uri(MOVIEINFOS + "/{id}", id)
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(MovieInfo.class)
+                .consumeWith(movieInfoEntityExchangeResult -> {
+                    MovieInfo movie = movieInfoEntityExchangeResult.getResponseBody();
+                    assertNotNull(movie);
+                    assert movie.getName().equals("testMovie");
                 });
 
     }
