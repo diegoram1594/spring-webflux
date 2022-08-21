@@ -25,4 +25,17 @@ public class MovieService {
     public Mono<MovieInfo> getMovieById(String id) {
         return movieInfoRepository.findById(id);
     }
+
+    public Mono<MovieInfo> updateMovie(MovieInfo movieInfo, String id) {
+        return movieInfoRepository
+                .findById(id)
+                .flatMap( movie -> {
+                    movieInfo.setId(id);
+                    return movieInfoRepository.save(movieInfo);
+                });
+    }
+
+    public Mono<Void> deleteMovie(String id) {
+        return movieInfoRepository.deleteById(id);
+    }
 }

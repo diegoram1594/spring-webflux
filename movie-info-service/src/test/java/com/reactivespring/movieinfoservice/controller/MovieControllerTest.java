@@ -88,4 +88,43 @@ class MovieControllerTest {
                 });
 
     }
+
+    @Test
+    public void updateMovieById(){
+        String id = "1";
+        webTestClient.put()
+                .uri(MOVIEINFOS + "/{id}", id)
+                .bodyValue( new MovieInfo(
+                        "1",
+                        "updateName",
+                        1994,
+                        List.of("testActor"),
+                        LocalDate.now()))
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(MovieInfo.class)
+                .consumeWith(movieInfoEntityExchangeResult -> {
+                    MovieInfo movie = movieInfoEntityExchangeResult.getResponseBody();
+                    assertNotNull(movie);
+                    assert movie.getName().equals("updateName");
+                });
+
+    }
+
+    @Test
+    public void deleteMovieById(){
+        String id = "1";
+        webTestClient.delete()
+                .uri(MOVIEINFOS + "/{id}", id)
+                .exchange()
+                .expectStatus()
+                .isNoContent();
+
+        webTestClient.get()
+                .uri(MOVIEINFOS)
+                .exchange()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(1);
+    }
 }
