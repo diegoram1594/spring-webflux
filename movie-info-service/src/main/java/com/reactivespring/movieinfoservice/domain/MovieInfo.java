@@ -3,6 +3,9 @@ package com.reactivespring.movieinfoservice.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -11,7 +14,10 @@ public class MovieInfo {
 
     @Id
     private String id;
+    @NotBlank(message = "name must be present")
     private String name;
+    @NotNull(message = "year must be present")
+    @Positive(message = "year must be a positive value")
     private Integer year;
     private List<String> cast;
     private LocalDate relaseDate;

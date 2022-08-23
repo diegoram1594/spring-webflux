@@ -16,6 +16,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
 
 @WebFluxTest(controllers = MovieController.class)
 @AutoConfigureWebTestClient
@@ -86,5 +88,58 @@ public class MovieControllerUnitTest {
                     assert movieInfo.getId().equals(id);
                 } );
 
+    }
+
+    @Test
+    public void shouldValidateWhenSavingAMovie(){
+        String id = "testId";
+        webTestClient.post()
+                .uri(MOVIEINFOS)
+                .bodyValue(
+                        new MovieInfo(null,"",null, List.of("testActor"), LocalDate.now()))
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+
+    }
+
+    @Test
+    public void updateMovieById(){
+        String id = "1";
+        MovieInfo movieReturn =
+                new MovieInfo(id,"updateName",1994, List.of("testActor"), LocalDate.now());
+        Mockito.when(movieService.updateMovie(isA(MovieInfo.class), eq(id)))
+                .thenReturn(Mono.just(movieReturn));
+        webTestClient.put()
+                .uri(MOVIEINFOS + "/{id}", id)
+                .bodyValue( new MovieInfo(
+                        "1",
+                        "updateName",
+                        1994,
+                        List.of("testActor"),
+                        LocalDate.now()))
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(MovieInfo.class)
+                .consumeWith(movieInfoEntityExchangeResult -> {
+                    MovieInfo movie = movieInfoEntityExchangeResult.getResponseBody();
+                    assertNotNull(movie);
+                    assert movie.getName().equals("updateName");
+                });
+
+    }
+
+
+    @Test
+    public void deleteMovieById(){
+        String id = "1";
+        Mockito.when(movieService.deleteMovie( eq(id)))
+                .thenReturn(Mono.empty());
+        webTestClient.delete()
+                .uri(MOVIEINFOS + "/{id}", id)
+                .exchange()
+                .expectStatus()
+                .isNoContent();
     }
 }
