@@ -14,10 +14,10 @@ public class MovieInfo {
 
     @Id
     private String id;
-    @NotBlank(message = "name must be present")
+    @NotBlank(message = "MovieInfo.name must be present")
     private String name;
-    @NotNull(message = "year must be present")
-    @Positive(message = "year must be a positive value")
+    @NotNull(message = "MovieInfo.year must be present")
+    @Positive(message = "MovieInfo.year must be a positive value")
     private Integer year;
     private List<String> cast;
     private LocalDate relaseDate;

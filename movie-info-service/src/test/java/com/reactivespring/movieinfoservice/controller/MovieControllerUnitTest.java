@@ -1,5 +1,6 @@
 package com.reactivespring.movieinfoservice.controller;
 
+import com.reactivespring.movieinfoservice.domain.ExceptionDTO;
 import com.reactivespring.movieinfoservice.domain.MovieInfo;
 import com.reactivespring.movieinfoservice.services.MovieService;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
@@ -99,7 +101,17 @@ public class MovieControllerUnitTest {
                         new MovieInfo(null,"",null, List.of("testActor"), LocalDate.now()))
                 .exchange()
                 .expectStatus()
-                .isBadRequest();
+                .isBadRequest()
+                .expectBody(ExceptionDTO.class)
+                .consumeWith(validationError -> {
+                    ExceptionDTO exceptionDTO = validationError.getResponseBody();
+                    assertNotNull(exceptionDTO);
+                    List<String> errors = exceptionDTO.getErrors();
+                    assert errors.size() == 2;
+                    assert errors.contains("MovieInfo.name must be present");
+                    assert errors.contains("MovieInfo.year must be present");
+
+                });
 
     }
 
