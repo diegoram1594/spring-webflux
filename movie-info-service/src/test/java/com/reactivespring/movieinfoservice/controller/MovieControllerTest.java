@@ -5,6 +5,7 @@ import com.reactivespring.movieinfoservice.repository.MovieInfoRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
@@ -15,11 +16,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
 
 @SpringBootTest()
 @AutoConfigureWebTestClient
@@ -90,6 +94,16 @@ class MovieControllerTest {
     }
 
     @Test
+    public void getMovieByIdNotFound(){
+        String id = "NotFound";
+        webTestClient.get()
+                .uri(MOVIEINFOS + "/{id}", id)
+                .exchange()
+                .expectStatus()
+                .isNotFound();
+    }
+
+    @Test
     public void updateMovieById(){
         String id = "1";
         webTestClient.put()
@@ -109,6 +123,23 @@ class MovieControllerTest {
                     assertNotNull(movie);
                     assert movie.getName().equals("updateName");
                 });
+
+    }
+
+    @Test
+    public void updateMovieByIdNotFound(){
+        String id = "notFound";
+        webTestClient.put()
+                .uri(MOVIEINFOS + "/{id}", id)
+                .bodyValue( new MovieInfo(
+                        "1",
+                        "updateName",
+                        1994,
+                        List.of("testActor"),
+                        LocalDate.now()))
+                .exchange()
+                .expectStatus()
+                .isNotFound();
 
     }
 

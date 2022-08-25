@@ -70,6 +70,19 @@ public class MovieControllerUnitTest {
     }
 
     @Test
+    public void getMovieInfoByIdNotFound(){
+        String id = "1";
+                new MovieInfo(id,"movieName",1994, List.of("testActor"), LocalDate.now());
+        Mockito.when(movieService.getMovieById(Mockito.eq("1")))
+                .thenReturn(Mono.empty());
+        webTestClient.get()
+                .uri(MOVIEINFOS + "/{id}", id)
+                .exchange()
+                .expectStatus()
+                .isNotFound();
+    }
+
+    @Test
     public void saveMovie(){
         String id = "testId";
         MovieInfo movieReturn =
@@ -139,6 +152,27 @@ public class MovieControllerUnitTest {
                     assertNotNull(movie);
                     assert movie.getName().equals("updateName");
                 });
+
+    }
+
+    @Test
+    public void updateMovieByIdNotFound(){
+        String id = "notFound";
+        MovieInfo movieReturn =
+                new MovieInfo(id,"updateName",1994, List.of("testActor"), LocalDate.now());
+        Mockito.when(movieService.updateMovie(isA(MovieInfo.class), eq(id)))
+                .thenReturn(Mono.empty());
+        webTestClient.put()
+                .uri(MOVIEINFOS + "/{id}", id)
+                .bodyValue( new MovieInfo(
+                        "1",
+                        "updateName",
+                        1994,
+                        List.of("testActor"),
+                        LocalDate.now()))
+                .exchange()
+                .expectStatus()
+                .isNotFound();
 
     }
 
