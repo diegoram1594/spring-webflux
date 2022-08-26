@@ -16,8 +16,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -74,6 +79,38 @@ class MovieControllerTest {
                 .exchange()
                 .expectBodyList(MovieInfo.class)
                 .hasSize(2);
+    }
+
+    @Test
+    public void getAllMoviesByYear(){
+        URI uri = UriComponentsBuilder
+                .fromUriString(MOVIEINFOS)
+                .queryParam("year", 1994)
+                .buildAndExpand()
+                .toUri();
+
+
+        webTestClient.get()
+                .uri(uri)
+                .exchange()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(1);
+    }
+
+    @Test
+    public void getAllMoviesByName(){
+        URI uri = UriComponentsBuilder
+                .fromUriString(MOVIEINFOS)
+                .queryParam("name", "testMovie")
+                .buildAndExpand()
+                .toUri();
+
+
+        webTestClient.get()
+                .uri(uri)
+                .exchange()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(1);
     }
 
     @Test
@@ -157,5 +194,14 @@ class MovieControllerTest {
                 .exchange()
                 .expectBodyList(MovieInfo.class)
                 .hasSize(1);
+    }
+
+    @Test
+    public void findByYear(){
+        Flux<MovieInfo> movie = movieInfoRepository.findByYear(1994);
+
+        StepVerifier.create(movie)
+                .expectNextCount(1)
+                .verifyComplete();
     }
 }

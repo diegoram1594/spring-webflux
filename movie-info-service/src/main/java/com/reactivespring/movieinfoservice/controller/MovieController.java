@@ -24,17 +24,24 @@ public class MovieController {
 
     @PostMapping("/movieinfo")
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<MovieInfo> saveMovie(@RequestBody @Valid MovieInfo movieInfo){
+    public Mono<MovieInfo> saveMovie(@RequestBody @Valid MovieInfo movieInfo) {
         return movieService.saveMovie(movieInfo);
     }
 
     @GetMapping("/movieinfo")
-    public Flux<MovieInfo> getAllMovies(){
+    public Flux<MovieInfo> getAllMovies(@RequestParam(value = "year", required = false) Integer year,
+                                        @RequestParam(value = "name", required = false) String name) {
+        if (year != null) {
+            return movieService.getMoviesByYear(year);
+        }
+        if (name != null){
+            return movieService.getMovieByName(name).flatMapMany(Flux::just);
+        }
         return movieService.getAllMovies();
     }
 
     @GetMapping("/movieinfo/{id}")
-    public Mono<ResponseEntity<MovieInfo>> getMovieById(@PathVariable String id){
+    public Mono<ResponseEntity<MovieInfo>> getMovieById(@PathVariable String id) {
         return movieService.getMovieById(id)
                 .map(ResponseEntity.ok()::body)
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
@@ -42,7 +49,7 @@ public class MovieController {
 
     @PutMapping("/movieinfo/{id}")
     public Mono<ResponseEntity<MovieInfo>> updateMovieById(@RequestBody MovieInfo movieInfo,
-                                                @PathVariable String id){
+                                                @PathVariable String id) {
         return movieService.updateMovie(movieInfo, id)
                 .map(m -> ResponseEntity.ok().body(m))
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
@@ -50,7 +57,7 @@ public class MovieController {
 
     @DeleteMapping("/movieinfo/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<Void> deleteMovieById(@PathVariable String id){
+    public Mono<Void> deleteMovieById(@PathVariable String id) {
         return movieService.deleteMovie(id);
     }
 }
