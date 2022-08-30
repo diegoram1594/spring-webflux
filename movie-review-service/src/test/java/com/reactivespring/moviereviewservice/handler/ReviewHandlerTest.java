@@ -11,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @SpringBootTest()
@@ -19,7 +18,7 @@ import java.util.List;
 @DirtiesContext()
 class ReviewHandlerTest {
 
-    public static final String REVIEWI_URL = "/v1/reviews";
+    public static final String REVIEW_URL = "/v1/reviews";
     @Autowired
     WebTestClient webTestClient;
     @Autowired
@@ -28,9 +27,9 @@ class ReviewHandlerTest {
     @BeforeEach
     public void init(){
         List<Review> reviewsList = List.of(
-                new Review(null, "1", "Awesome Movie", 9.0),
-                new Review(null, "1", "Awesome Movie1", 9.0),
-                new Review(null, "2", "Excellent Movie", 8.0));
+                new Review("1", "1", "Awesome Movie", 9.0),
+                new Review("2", "1", "Awesome Movie1", 9.0),
+                new Review("3", "2", "Excellent Movie", 8.0));
         reviewRepository.saveAll(reviewsList).blockLast();
     }
 
@@ -42,7 +41,7 @@ class ReviewHandlerTest {
     @Test
     void saveReview() {
         webTestClient.post()
-                .uri(REVIEWI_URL)
+                .uri(REVIEW_URL)
                 .bodyValue(
                         new Review(null, "1", "Awesome Movie", 9.0))
                 .exchange()
@@ -53,6 +52,42 @@ class ReviewHandlerTest {
                     Review review = reviewResult.getResponseBody();
                     assert review != null;
                     assert review.getId() != null;
+                });
+    }
+
+    @Test
+    void getAllReviews() {
+        webTestClient.get()
+                .uri(REVIEW_URL)
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBodyList(Review.class)
+                .consumeWith( listEntityExchangeResult -> {
+                    List<Review> reviews = listEntityExchangeResult.getResponseBody();
+                    assert reviews != null;
+                    assert reviews.size() == 3;
+                });
+    }
+
+    @Test
+    void updateReview() {
+        String id = "1";
+        String commentTest = "updateTest";
+        webTestClient.put()
+                .uri(REVIEW_URL + "/{id}",id)
+                .bodyValue(
+                        new Review(id, "1", commentTest, 9.0)
+                )
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(Review.class)
+                .consumeWith( listEntityExchangeResult -> {
+                    Review review = listEntityExchangeResult.getResponseBody();
+                    assert review != null;
+                    assert review.getComment().equals(commentTest);
+                    assert review.getId().equals(id);
                 });
     }
 
