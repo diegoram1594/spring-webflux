@@ -10,8 +10,12 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest()
 @AutoConfigureWebTestClient
@@ -71,6 +75,27 @@ class ReviewHandlerTest {
     }
 
     @Test
+    void getAllReviewsByMovieInfoId() {
+        URI uri = UriComponentsBuilder
+                .fromUriString(REVIEW_URL)
+                .queryParam("movieInfoId", 1)
+                .buildAndExpand()
+                .toUri();
+
+        webTestClient.get()
+                .uri(uri)
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBodyList(Review.class)
+                .consumeWith( listEntityExchangeResult -> {
+                    List<Review> reviews = listEntityExchangeResult.getResponseBody();
+                    assert reviews != null;
+                    assert reviews.size() == 2;
+                });
+    }
+
+    @Test
     void updateReview() {
         String id = "1";
         String commentTest = "updateTest";
@@ -89,6 +114,19 @@ class ReviewHandlerTest {
                     assert review.getComment().equals(commentTest);
                     assert review.getId().equals(id);
                 });
+
+    }
+
+    @Test
+    void deleteReview() {
+        String id = "1";
+        String commentTest = "updateTest";
+        webTestClient.delete()
+                .uri(REVIEW_URL + "/{id}",id)
+                .exchange()
+                .expectStatus()
+                .isNoContent();
+
     }
 
 }
