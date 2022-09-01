@@ -4,12 +4,17 @@ package com.reactivespring.moviereviewservice.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+
 @Document
 public class Review {
     @Id
     private String id;
+    @NotBlank(message = "movieInfoId: please provide a value")
     private String movieInfoId;
     private String comment;
+    @Min(value = 0L, message = "rating: please provide a non-negative value")
     private Double rating;
 
     public Review() {

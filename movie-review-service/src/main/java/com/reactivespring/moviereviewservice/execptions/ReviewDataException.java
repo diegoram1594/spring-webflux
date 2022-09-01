@@ -1,11 +1,12 @@
 package com.reactivespring.moviereviewservice.execptions;
 
+import java.util.List;
+
 public class ReviewDataException extends RuntimeException {
 
-    private String message;
+    private List<String> message;
 
-    public ReviewDataException(String message) {
-        super(message);
+    public ReviewDataException(List<String> message) {
         this.message = message;
     }
 }
