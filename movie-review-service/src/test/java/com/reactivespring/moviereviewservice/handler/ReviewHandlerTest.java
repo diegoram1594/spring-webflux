@@ -1,5 +1,6 @@
 package com.reactivespring.moviereviewservice.handler;
 
+import com.reactivespring.moviereviewservice.domain.ExceptionDTO;
 import com.reactivespring.moviereviewservice.domain.Review;
 import com.reactivespring.moviereviewservice.repository.ReviewRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -11,11 +12,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest()
 @AutoConfigureWebTestClient
@@ -113,6 +117,42 @@ class ReviewHandlerTest {
                     assert review != null;
                     assert review.getComment().equals(commentTest);
                     assert review.getId().equals(id);
+                });
+
+    }
+
+    @Test
+    void updateReviewNotFound() {
+        String id = "notFound";
+        String commentTest = "updateTest";
+        webTestClient.put()
+                .uri(REVIEW_URL + "/{id}",id)
+                .bodyValue(
+                        new Review(id, "1", commentTest, 9.0)
+                )
+                .exchange()
+                .expectStatus()
+                .isNotFound();
+
+    }
+
+    @Test
+    void updateReviewBadRequest() {
+        String id = "1";
+        String commentTest = "comment test";
+        webTestClient.put()
+                .uri(REVIEW_URL + "/{id}",id)
+                .bodyValue(
+                        new Review(id, "1", commentTest, -9.0)
+                )
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody(ExceptionDTO.class)
+                .consumeWith(response ->{
+                    ExceptionDTO responseDTO = response.getResponseBody();
+                    assert responseDTO != null;
+                    assertEquals(1, responseDTO.getErrors().size());
                 });
 
     }

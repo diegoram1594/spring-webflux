@@ -1,6 +1,9 @@
 package com.reactivespring.moviereviewservice.handler;
 
+import com.reactivespring.moviereviewservice.domain.ExceptionDTO;
 import com.reactivespring.moviereviewservice.domain.Review;
+import com.reactivespring.moviereviewservice.exceptionhandler.GlobalExceptionHandler;
+import com.reactivespring.moviereviewservice.execptions.ReviewDataException;
 import com.reactivespring.moviereviewservice.repository.ReviewRepository;
 import com.reactivespring.moviereviewservice.router.ReviewRouter;
 import org.junit.jupiter.api.Disabled;
@@ -18,12 +21,13 @@ import reactor.core.publisher.Mono;
 import java.net.URI;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest
-@ContextConfiguration(classes = {ReviewHandler.class, ReviewRouter.class})
+@ContextConfiguration(classes = {ReviewHandler.class, ReviewRouter.class, GlobalExceptionHandler.class})
 @AutoConfigureWebTestClient
 public class ReviewHandlerUnitTest {
 
@@ -58,16 +62,22 @@ public class ReviewHandlerUnitTest {
     }
 
     @Test
-    @Disabled
     void saveReviewValidation() {
-        Review review = new Review(null, "", "Awesome Movie", -9.0);
+        Review review = new Review(null, "", "Awesome Movie", -1D);
         webTestClient.post()
                 .uri(REVIEW_URL)
                 .bodyValue(
                         review)
                 .exchange()
                 .expectStatus()
-                .isBadRequest();
+                .isBadRequest()
+                .expectBody(ExceptionDTO.class)
+                .consumeWith(response -> {
+                    ExceptionDTO ex = response.getResponseBody();
+                    assertNotNull(ex);
+                    assertNotNull(ex.getErrors());
+                    assertEquals(2, ex.getErrors().size());
+                });
     }
 
     @Test
@@ -119,7 +129,6 @@ public class ReviewHandlerUnitTest {
 
     @Test
     void updateReview() {
-
         String id = "1";
         String commentTest = "updateTest";
         when(reviewRepository.findById(id))
@@ -144,6 +153,23 @@ public class ReviewHandlerUnitTest {
                     assert review.getComment().equals(commentTest);
                     assert review.getId().equals(id);
                 });
+
+    }
+
+    @Test
+    void updateReviewNotFound() {
+        String id = "1";
+        String commentTest = "updateTest";
+        when(reviewRepository.findById(id)).thenReturn(Mono.empty());
+
+        webTestClient.put()
+                .uri(REVIEW_URL + "/{id}",id)
+                .bodyValue(
+                        new Review(id, "1", commentTest, 9.0)
+                )
+                .exchange()
+                .expectStatus()
+                .isNotFound();
 
     }
 

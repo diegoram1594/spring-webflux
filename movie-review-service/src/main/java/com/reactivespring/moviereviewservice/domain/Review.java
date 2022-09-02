@@ -4,6 +4,7 @@ package com.reactivespring.moviereviewservice.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 
@@ -15,6 +16,7 @@ public class Review {
     private String movieInfoId;
     private String comment;
     @Min(value = 0L, message = "rating: please provide a non-negative value")
+    @Max(value = 10L, message = "rating: is greater than 10")
     private Double rating;
 
     public Review() {

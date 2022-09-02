@@ -2,6 +2,7 @@ package com.reactivespring.moviereviewservice.handler;
 
 import com.reactivespring.moviereviewservice.domain.Review;
 import com.reactivespring.moviereviewservice.execptions.ReviewDataException;
+import com.reactivespring.moviereviewservice.execptions.ReviewNotFoundException;
 import com.reactivespring.moviereviewservice.repository.ReviewRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class ReviewHandler {
 
     public Mono<ServerResponse> addReview(ServerRequest request) {
         return request.bodyToMono(Review.class)
-                .doOnNext(this::validate)
+                .doOnNext(this::validateFields)
                 .flatMap(reviewRepository::save)
                 .flatMap(review -> ServerResponse
                        .created(request
@@ -43,15 +44,16 @@ public class ReviewHandler {
                 );
     }
 
-    private void validate(Review review) {
+    private void validateFields(Review review) {
+        String message = "Please verify the request and try again";
         Set<ConstraintViolation<Review>> errors = validator.validate(review);
         if (errors.size() > 0) {
-            List<String> errorsMessage = errors.stream()
+            List<String> errorList = errors.stream()
                     .map(ConstraintViolation::getMessage)
                     .sorted()
                     .collect(Collectors.toList());
-            log.error(String.join(", ", errorsMessage));
-            throw new ReviewDataException(errorsMessage);
+            log.error(String.join(", ", errorList));
+            throw new ReviewDataException(errorList, message);
         }
     }
 
@@ -69,8 +71,16 @@ public class ReviewHandler {
 
     public Mono<ServerResponse> updateReview(ServerRequest serverRequest) {
         String reviewId = serverRequest.pathVariable("id");
+
         return reviewRepository.findById(reviewId)
-                .flatMap(reviewRequest -> serverRequest.bodyToMono(Review.class))
+                .switchIfEmpty(Mono.error(new ReviewNotFoundException("Review not found for the given id " + reviewId)))
+                .flatMap(review -> serverRequest.bodyToMono(Review.class)
+                        .map(reqReview -> {
+                            review.setComment(reqReview.getComment());
+                            review.setRating(reqReview.getRating());
+                            validateFields(review);
+                            return review;
+                        }))
                 .flatMap(reviewRepository::save)
                 .flatMap(ServerResponse.ok()::bodyValue);
 
