@@ -19,6 +19,7 @@
     <modules>
         <module>movie-info-service</module>
         <module>movie-review-service</module>
+        <module>movie-service</module>
     </modules>
 
     <dependencies>
