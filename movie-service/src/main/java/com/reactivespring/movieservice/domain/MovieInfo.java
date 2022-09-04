@@ -1,7 +1,4 @@
-package com.reactivespring.movieinfoservice.domain;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+package com.reactivespring.movieservice.domain;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -9,10 +6,8 @@ import javax.validation.constraints.Positive;
 import java.time.LocalDate;
 import java.util.List;
 
-@Document
 public class MovieInfo {
 
-    @Id
     private String id;
     @NotBlank(message = "MovieInfo.name must be present")
     private String name;
