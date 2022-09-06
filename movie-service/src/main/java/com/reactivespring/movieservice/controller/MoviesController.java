@@ -30,7 +30,7 @@ public class MoviesController {
         return movieInfoRestClient.retrieveMovieInfo(movieId)
                 .flatMap(movieInfo -> {
                     Mono<List<Review>> reviewList = reviewRestClient.retrieveMovieInfo(movieId).collectList();
-                    return reviewList.map( reviews -> new Movie(movieInfo, reviews));
+                    return reviewList.flatMap(reviews -> Mono.just(new Movie(movieInfo, reviews)));
                 });
     }
 }
