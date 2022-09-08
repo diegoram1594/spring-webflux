@@ -2,6 +2,7 @@ package com.reactivespring.movieservice.client;
 
 import com.reactivespring.movieservice.domain.Review;
 import com.reactivespring.movieservice.exceptions.ServerException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,8 +16,8 @@ import java.net.URI;
 public class ReviewRestClient {
 
     private final WebClient webClient;
-    //@Value("${restClient.movieReviewUrl}")
-    private String reviewUrl = "http://localhost:8081/v1/reviews";
+    @Value("${restClient.movieReviewUrl}")
+    private String reviewUrl;
 
     public ReviewRestClient(WebClient webClient) {
         this.webClient = webClient;
@@ -29,17 +30,7 @@ public class ReviewRestClient {
         return webClient.get()
                 .uri(uri)
                 .retrieve()
-                .onStatus(HttpStatus::is4xxClientError, clientResponse -> {
-                    HttpStatus httpStatus = clientResponse.statusCode();
-                    if (httpStatus.equals(HttpStatus.NOT_FOUND)) {
-                        return Mono.empty();
-                    }
-                    return clientResponse.bodyToMono(String.class)
-                            .flatMap(response -> Mono.error(new ServerException(response, httpStatus)));
-                })
-                .onStatus(HttpStatus::is5xxServerError, clientResponse -> clientResponse.bodyToMono(String.class)
-                        .flatMap(response -> Mono.error(new ServerException(response,
-                                clientResponse.statusCode()))))
+                .onStatus(HttpStatus::isError, clientResponse -> Mono.empty())
                 .bodyToFlux(Review.class);
     }
 

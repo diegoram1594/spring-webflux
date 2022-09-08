@@ -1,0 +1,26 @@
+[
+  {
+    "id": "631227b8bbfb193a63a8eb03",
+    "movieInfoId": "1",
+    "comment": "test",
+    "rating": 3.0
+  },
+  {
+    "id": "631227c8bbfb193a63a8eb04",
+    "movieInfoId": "1",
+    "comment": "",
+    "rating": 3.0
+  },
+  {
+    "id": "631621c842bf2445445974f1",
+    "movieInfoId": "1",
+    "comment": "Hello Review",
+    "rating": 3.0
+  },
+  {
+    "id": "631621d542bf2445445974f2",
+    "movieInfoId": "1",
+    "comment": "Good",
+    "rating": 9.0
+  }
+]
