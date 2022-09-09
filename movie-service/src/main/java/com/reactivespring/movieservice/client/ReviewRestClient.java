@@ -2,6 +2,7 @@ package com.reactivespring.movieservice.client;
 
 import com.reactivespring.movieservice.domain.Review;
 import com.reactivespring.movieservice.exceptions.ServerException;
+import com.reactivespring.movieservice.util.RetryUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -27,11 +28,19 @@ public class ReviewRestClient {
         URI uri = UriComponentsBuilder.fromHttpUrl(reviewUrl)
                 .queryParam("movieInfoId", movieInfoId)
                 .buildAndExpand().toUri();
-        return webClient.get()
-                .uri(uri)
-                .retrieve()
-                .onStatus(HttpStatus::isError, clientResponse -> Mono.empty())
-                .bodyToFlux(Review.class);
+        try {
+         return webClient.get()
+                    .uri(uri)
+                    .retrieve()
+                    .onStatus(HttpStatus::is4xxClientError, clientResponse -> Mono.empty())
+                    .onStatus(HttpStatus::is5xxServerError, clientResponse ->
+                            Mono.error(new ServerException("Error server Review",
+                                    clientResponse.statusCode())))
+                    .bodyToFlux(Review.class)
+                    .retryWhen(RetryUtil.retrySpec());
+        }catch (ServerException e){
+            return Flux.empty();
+        }
     }
 
 

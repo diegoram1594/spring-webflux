@@ -21,8 +21,8 @@ public class GlobalErrorHandler {
                 .body(new ExceptionResponse(new Date(),exception.getHttpStatus().getReasonPhrase() ,exception.getMessage()));
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ExceptionResponse> handleRuntimeException(RuntimeException exception) {
+    @ExceptionHandler(ServerException.class)
+    public ResponseEntity<ExceptionResponse> handleRuntimeException(ServerException exception) {
         log.error(exception.getMessage());
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
