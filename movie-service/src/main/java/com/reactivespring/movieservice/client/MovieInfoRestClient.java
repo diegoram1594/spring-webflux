@@ -1,5 +1,6 @@
 package com.reactivespring.movieservice.client;
 
+import com.reactivespring.movieservice.domain.Movie;
 import com.reactivespring.movieservice.domain.MovieInfo;
 import com.reactivespring.movieservice.exceptions.ClientException;
 import com.reactivespring.movieservice.exceptions.ServerException;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 import reactor.util.retry.RetryBackoffSpec;
@@ -49,5 +51,21 @@ public class MovieInfoRestClient {
     }
 
 
+    public Flux<MovieInfo> streamMovieInfo() {
+        String url = movieInfoUrl.concat("/stream");
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .onStatus(HttpStatus::is4xxClientError, clientResponse -> {
+                    HttpStatus httpStatus = clientResponse.statusCode();
+                    return Mono.error(new ClientException("Error", httpStatus));
+                })
+                .onStatus(HttpStatus::is5xxServerError, clientResponse ->
+                        Mono.error(new ServerException("Error server MovieInfo",
+                                clientResponse.statusCode()))
+                )
+                .bodyToFlux(MovieInfo.class)
+                .retryWhen(RetryUtil.retrySpec());
 
+    }
 }

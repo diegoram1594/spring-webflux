@@ -3,11 +3,13 @@ package com.reactivespring.movieinfoservice.controller;
 import com.reactivespring.movieinfoservice.domain.MovieInfo;
 import com.reactivespring.movieinfoservice.services.MovieService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 import javax.validation.Valid;
 
@@ -17,6 +19,7 @@ import javax.validation.Valid;
 public class MovieController {
 
     private final MovieService movieService;
+    Sinks.Many<MovieInfo> sink = Sinks.many().replay().all();
 
     public MovieController(MovieService movieService) {
         this.movieService = movieService;
@@ -25,8 +28,15 @@ public class MovieController {
     @PostMapping("/movieinfo")
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<MovieInfo> saveMovie(@RequestBody @Valid MovieInfo movieInfo) {
-        return movieService.saveMovie(movieInfo);
+        return movieService.saveMovie(movieInfo)
+                .doOnNext(movie -> sink.tryEmitNext(movie));
     }
+
+    @GetMapping(value = "/movieinfo/stream", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public Flux<MovieInfo> getStreamMovieInfo(){
+        return sink.asFlux();
+    }
+
 
     @GetMapping("/movieinfo")
     public Flux<MovieInfo> getAllMovies(@RequestParam(value = "year", required = false) Integer year,

@@ -3,6 +3,7 @@ package com.reactivespring.movieinfoservice.controller;
 import com.reactivespring.movieinfoservice.domain.MovieInfo;
 import com.reactivespring.movieinfoservice.repository.MovieInfoRepository;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -70,6 +71,39 @@ class MovieControllerTest {
                     assert movie != null;
                     assert movie.getId() != null;
                 });
+    }
+
+    @Test
+    void streamMovieInfo() {
+        webTestClient.post()
+                .uri(MOVIEINFOS)
+                .bodyValue(
+                        new MovieInfo("3","testMovie3",1994, List.of("testActor"), LocalDate.now()))
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .expectBody(MovieInfo.class)
+                .consumeWith(movieInfoEntityExchangeResult -> {
+                    MovieInfo movie = movieInfoEntityExchangeResult.getResponseBody();
+                    assert movie != null;
+                    assert movie.getId() != null;
+                });
+        Flux<MovieInfo> movieSink = webTestClient.get()
+                .uri(MOVIEINFOS + "/stream")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .returnResult(MovieInfo.class)
+                .getResponseBody();
+
+        StepVerifier.create(movieSink)
+                .assertNext(movieInfo -> {
+                    assertNotNull(movieInfo);
+                    assertEquals("testMovie3", movieInfo.getName());
+                })
+                .thenCancel()
+                .verify();
+
     }
 
     @Test
